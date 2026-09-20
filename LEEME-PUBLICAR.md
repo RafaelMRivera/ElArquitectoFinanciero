@@ -25,12 +25,12 @@ Una capa posterior siempre gana sobre una anterior, sin depender de la especific
 - **base**: reset y elementos HTML sin clase.
 - **templates**: el cascarón de cada sección (`.wrap`, `.sec`, `.dark`/`.light`/`.paper`).
 - **atoms**: piezas mínimas (`.btn`, `.ic`, `.eyebrow`, `.pill`, `.link`).
-- **molecules**: combinaciones de átomos (`.brand`, `.nav`, `.kpi`, `.cell`, `.step`, `details`).
-- **organisms**: secciones completas (`.bar`, `.hero`, `.s360`, `.tablero`, `.ley`, `.foot`, `.doc`, `.notfound`).
+- **molecules**: combinaciones de átomos (`.brand`, `.nav`, `.kpi`, `.cell`, `.svc`, `.fase`, `.obt`, `details`).
+- **organisms**: secciones completas (`.bar`, `.hero`, `.svc-grid`, `.fases`, `.s360`, `.tablero`, `.foot`, `.doc`, `.notfound`).
 - **utilities**: revelado al hacer scroll (`.rv`), titulares partidos y foco de luz.
 
 Para cambiar una pieza, edítala en su capa. Cuando modifiques `css/styles.css` o `js/main.js`, sube el número de versión en el HTML
-(`css/styles.css?v=1` → `?v=2`, en `index.html`, `politica-de-datos.html` y `404.html`), porque esos archivos se guardan en caché un año.
+(`css/styles.css?v=6` → `?v=7`, en `index.html`, `politica-de-datos.html` y `404.html`), porque esos archivos se guardan en caché un año.
 
 ## Antes de publicar (5 minutos)
 
