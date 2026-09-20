@@ -8,6 +8,8 @@
       ".htaccess",
       "LEEME-PUBLICAR.md",
       "**/.*",
+      "**/.git/**",
+      "**/.firebase/**",
       "**/node_modules/**"
     ],
     "headers": [
