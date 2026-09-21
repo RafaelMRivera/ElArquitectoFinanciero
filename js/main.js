@@ -318,17 +318,32 @@ if(!hasST||!hasVT){
   });
 })();
 
-/* ---- foco de luz en tarjetas ---- */
+/* ---- foco de luz: circunferencia con glow que sigue al cursor dentro de cada tarjeta ---- */
 (function(){
   if(!fine)return;
-  var sel='.ev,.svc,.obt,.cell,.chk';
-  $$(sel).forEach(function(el){
-    el.classList.add('spot');var s=document.createElement('i');s.className='spl';s.setAttribute('aria-hidden','true');el.insertBefore(s,el.firstChild);
-    var tk=false;
+  var DARK='.ev,.svc,.paso,.faq-sec details',LIGHT='.obt,.cell,.chk,.dkpi,.pnl';
+  function attach(el,light){
+    el.classList.add('spot');if(light)el.classList.add('spot-l');
+    var host=el.tagName==='DETAILS'?$('summary',el):el;if(!host)return;
+    var l=document.createElement('i');l.className='spl';l.setAttribute('aria-hidden','true');
+    var c=document.createElement('i');c.className='spl-c';l.appendChild(c);
+    host.insertBefore(l,host.firstChild);
+    var tx=0,ty=0,cx=0,cy=0,run=0,seen=false;
+    function draw(){c.style.transform='translate3d('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px,0)'}
+    function loop(){
+      var k=reduce?1:.16;cx+=(tx-cx)*k;cy+=(ty-cy)*k;draw();
+      run=(Math.abs(tx-cx)>.3||Math.abs(ty-cy)>.3)?raf(loop):0;
+    }
     el.addEventListener('pointermove',function(e){
-      if(tk)return;tk=true;raf(function(){var r=el.getBoundingClientRect();el.style.setProperty('--mx',(e.clientX-r.left).toFixed(0)+'px');el.style.setProperty('--my',(e.clientY-r.top).toFixed(0)+'px');tk=false});
+      if(e.pointerType!=='mouse')return;
+      var r=host.getBoundingClientRect();tx=e.clientX-r.left;ty=e.clientY-r.top;
+      if(!seen){seen=true;cx=tx;cy=ty;draw()}
+      if(!run)run=raf(loop);
     });
-  });
+    el.addEventListener('pointerleave',function(){seen=false});
+  }
+  $$(DARK).forEach(function(e){attach(e,false)});
+  $$(LIGHT).forEach(function(e){attach(e,true)});
 })();
 
 /* ---- suavizado inercial de la rueda (solo mouse; se desactiva solo si no aplica) ---- */
@@ -357,21 +372,43 @@ if(!hasST||!hasVT){
   window.addEventListener('resize',function(){target=clamp(target,0,max())});
 })();
 
-/* ---------- autodiagnóstico ---------- */
+/* ---------- autodiagnósticos: empresarial y finanzas personales ---------- */
 (function(){
-  var f=$('#form-diag');if(!f)return;
-  var boxes=$$('input[name=q]',f),arc=$('#gArc'),gn=$('#gNum'),res=$('#diag-result');
-  function score(){return boxes.filter(function(b){return b.checked}).length}
-  function upd(){var s=score();gn.textContent=s;arc.style.strokeDashoffset=1-s/8}
-  boxes.forEach(function(b){b.addEventListener('change',upd)});
-  f.addEventListener('submit',function(e){
-    e.preventDefault();var s=score(),v;
+  var level=function(s){return s<=1?0:s<=3?1:s<=5?2:s<=7?3:4};
+  function setup(o){
+    var f=$(o.form);if(!f)return;
+    var boxes=$$('input[name=q]',f),arc=$(o.arc),gn=$(o.num),res=$(o.res);
+    function score(){return boxes.filter(function(b){return b.checked}).length}
+    function upd(){var s=score();gn.textContent=s;arc.style.strokeDashoffset=1-s/8;if(o.onScore)o.onScore(s)}
+    boxes.forEach(function(b){b.addEventListener('change',upd)});
+    f.addEventListener('submit',function(e){
+      e.preventDefault();o.show(score(),res);res.hidden=false;
+      res.scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
+    });
+  }
+  setup({form:'#form-diag',arc:'#gArc',num:'#gNum',res:'#diag-result',
+    onScore:function(s){$('#gaugeE').setAttribute('data-lv',level(s)+1)},
+    show:function(s){
+    var v;
     if(s<=2)v='Hoy decides sobre todo a ojo. Un modelo financiero propio te daría control rápido sobre precios, caja y cartera.';
     else if(s<=5)v='Tienes bases, pero todavía hay decisiones importantes sin respaldo en datos. Ahí está tu mayor oportunidad.';
     else v='Vas bien: ya decides con buena parte de tus datos. El siguiente paso es integrarlos en un solo tablero.';
-    $('#diag-score').textContent=s;$('#diag-verdict').textContent=v;res.hidden=false;
-    res.scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
-  });
+    $('#diag-score').textContent=s;$('#diag-verdict').textContent=v;
+  }});
+  /* triaje de finanzas personales: 5 niveles (0-1, 2-3, 4-5, 6-7, 8) */
+  var LV=[
+    {t:'TRIAGE CRÍTICO',d:'Estás al borde. Cada mes que pasa es un mes más cerca de perder tu casa, tu patrimonio o tu tranquilidad. La ansiedad no te deja dormir y las deudas te están ahogando. Esto no se resuelve solo. Necesitas actuar hoy.'},
+    {t:'TRIAGE ALTO',d:'Estás a una emergencia, a dos o un mes de caer al fondo. Sientes que la plata no alcanza, que trabajas para pagar deudas y que no avanzas. La angustia financiera está consumiendo tu energía. Todavía estás a tiempo.'},
+    {t:'TRIAGE MODERADO',d:'No hay crisis, pero sientes que algo no cuadra. Estás acumulando deuda de consumo que te roba tranquilidad y futuro. El insomnio ya llegó y la incertidumbre también. Es momento de ordenar esto antes de que sea tarde.'},
+    {t:'TRIAGE BAJO',d:'Vas bien, pero tu dinero pierde valor mientras duermes. No estás en peligro, pero tampoco estás construyendo tu tranquilidad. Dentro de 10 años vas a desear haber empezado hoy. No esperes más.'},
+    {t:'TRIAGE MÍNIMO',d:'Estás en el mejor punto. Ahora el reto es mantenerlo y diversificar para que tu tranquilidad no dependa de un solo ingreso. Una buena asesoría te ayuda a blindar lo que ya construiste.'}
+  ];
+  setup({form:'#form-per',arc:'#gArcP',num:'#gNumP',res:'#per-result',
+    onScore:function(s){$('#gaugeP').setAttribute('data-lv',level(s)+1)},
+    show:function(s,res){
+      var i=level(s);res.setAttribute('data-lv',i+1);
+      $('#per-score').textContent=s;$('#per-level').textContent=LV[i].t;$('#per-verdict').textContent=LV[i].d;
+    }});
 })();
 
 })();
@@ -380,7 +417,7 @@ if(!hasST||!hasVT){
 (function(){
   var d=document,$$=function(s,r){return [].slice.call((r||d).querySelectorAll(s))};
   if(!(window.CSS&&CSS.supports&&CSS.supports('animation-timeline','view()')))return;
-  var map=[['top','Inicio'],['servicios','Servicios'],['metodo','Método D-E-E-P'],['obtienes','Lo que obtienes'],['academia','Academia'],['sobre-rafael','Sobre Rafael'],['autodiagnostico','Autodiagnóstico']];
+  var map=[['top','Inicio'],['servicios','Servicios'],['metodo','Método D-E-E-P'],['obtienes','Lo que obtienes'],['autodiagnostico','Autodiagnóstico'],['finanzas-personales','Finanzas personales'],['academia','Academia'],['sobre-rafael','Sobre Rafael'],['preguntas','Preguntas']];
   var rail=d.getElementById('rail');if(!rail)return;
   var links={},html='';
   map.forEach(function(m){if(d.getElementById(m[0]))html+='<a href="#'+m[0]+'" data-id="'+m[0]+'" aria-label="'+m[1]+'"><span>'+m[1]+'</span></a>'});
