@@ -10,7 +10,7 @@
      - revelado al hacer scroll (.rv), respaldo de foto (#foto)
      - motor de movimiento: intro, header solido, boton flotante, nav activo,
        titulares con mascara, fade de secciones, metodo D-E-E-P (secuencia sticky), hero con mouse,
-       botones magneticos, foco de luz, scroll inercial, autodiagnostico
+       botones magneticos, foco de luz, scroll suave (Lenis), autodiagnostico
    Bloque 2 (IIFE)
      - riel de capitulos (#rail)
    ===================================================================== */
@@ -346,31 +346,21 @@ if(!hasST||!hasVT){
   $$(LIGHT).forEach(function(e){attach(e,true)});
 })();
 
-/* ---- suavizado inercial de la rueda (solo mouse; se desactiva solo si no aplica) ---- */
-(function(){
-  if(reduce||!fine)return;
-  var target=window.scrollY,cur=target,run=0,own=false,max=function(){return document.documentElement.scrollHeight-window.innerHeight};
-  function step(){
-    cur+=(target-cur)*.11;
-    if(Math.abs(target-cur)<.4){cur=target;own=true;window.scrollTo({top:cur,behavior:'instant'});run=0;setTimeout(function(){own=false},30);return}
-    own=true;window.scrollTo({top:cur,behavior:'instant'});run=raf(step);
-  }
-  window.addEventListener('wheel',function(e){
-    if(e.ctrlKey||e.defaultPrevented||e.deltaMode!==0&&e.deltaMode!==1)return;
-    var el=e.target;
-    while(el&&el!==document.body){var cs=getComputedStyle(el);if((/(auto|scroll)/.test(cs.overflowY))&&el.scrollHeight>el.clientHeight+2)return;el=el.parentElement}
-    // trackpads envían deltas pequeños y continuos: ya son suaves, no se tocan
-    var wd=e.wheelDeltaY;if(e.deltaMode===0&&(Math.abs(e.deltaY)<40||(wd!==undefined&&wd%120!==0)))return;
-    e.preventDefault();
-    var d=e.deltaMode===1?e.deltaY*32:e.deltaY;
-    target=clamp(target+d*1.0,0,max());
-    if(!run){cur=window.scrollY;run=raf(step)}
-  },{passive:false});
-  // si el scroll lo mueve otra cosa (ancla, teclado, barra), sincroniza
-  window.addEventListener('scroll',function(){if(!own){target=cur=window.scrollY}},{passive:true});
-  document.addEventListener('keydown',function(){target=cur=window.scrollY});
-  window.addEventListener('resize',function(){target=clamp(target,0,max())});
-})();
+/* ---- scroll suave con Lenis (librería desde CDN; sin ella o con reduced-motion, scroll nativo) ---- */
+var lenis=null;
+document.addEventListener('click',function(e){
+  if(!lenis||e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+  var a=e.target.closest&&e.target.closest('a[href^="#"]');if(!a)return;
+  var id=a.getAttribute('href');if(id.length<2)return;
+  var t=$(id);if(!t)return;
+  e.preventDefault();
+  lenis.scrollTo(id==='#top'?0:t,{onComplete:function(){if(id==='#contenido'){t.setAttribute('tabindex','-1');t.focus({preventScroll:true})}}});
+});
+function initLenis(){
+  if(reduce||!window.Lenis)return;
+  lenis=new Lenis({lerp:.07,wheelMultiplier:1.1,smoothWheel:true,syncTouch:false,autoRaf:true});
+}
+if(document.readyState==='complete')initLenis();else document.addEventListener('DOMContentLoaded',initLenis);
 
 /* ---------- autodiagnósticos: empresarial y finanzas personales ---------- */
 (function(){
@@ -383,7 +373,8 @@ if(!hasST||!hasVT){
     boxes.forEach(function(b){b.addEventListener('change',upd)});
     f.addEventListener('submit',function(e){
       e.preventDefault();o.show(score(),res);res.hidden=false;
-      res.scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
+      if(lenis){var r=res.getBoundingClientRect();if(r.bottom>innerHeight)lenis.scrollTo(window.scrollY+r.bottom-innerHeight+40);else if(r.top<90)lenis.scrollTo(window.scrollY+r.top-110)}
+      else res.scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
     });
   }
   setup({form:'#form-diag',arc:'#gArc',num:'#gNum',res:'#diag-result',

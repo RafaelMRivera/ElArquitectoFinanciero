@@ -85,6 +85,7 @@
 
   /* html */
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  html.lenis{scroll-behavior:auto!important}
 
   /* body */
   body{margin:0;font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--txt);background:var(--deep);line-height:1.6;font-size:17px;-webkit-font-smoothing:antialiased;overflow-x:hidden}

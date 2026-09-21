@@ -30,7 +30,7 @@ Una capa posterior siempre gana sobre una anterior, sin depender de la especific
 - **utilities**: revelado al hacer scroll (`.rv`), titulares partidos y foco de luz.
 
 Para cambiar una pieza, edítala en su capa. Cuando modifiques `css/styles.css` o `js/main.js`, sube el número de versión en el HTML
-(`css/styles.css?v=10` → `?v=11`, en `index.html`, `politica-de-datos.html` y `404.html`), porque esos archivos se guardan en caché un año.
+(`css/styles.css?v=13` → `?v=14`, en `index.html`, `politica-de-datos.html` y `404.html`), porque esos archivos se guardan en caché un año.
 
 ## Antes de publicar (5 minutos)
 
